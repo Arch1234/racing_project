@@ -23,4 +23,16 @@ for link in links:
     print(link.text.rsplit(",",1))
     print(link["href"])
     link_df.loc[len(link_df)] = link.text.rsplit(" ",1)+[link['href']]
-print(link_df)
+
+##Scrape a horse at a time and record the race-days it has been to 
+#check these against exhisting racedays
+#add horses race stats into the dataframe
+#once over a specific amount of races then concurrently scrape all the data
+    #return horse name into dataframe if not in there
+#when checking 
+#df.loc[df.eq('Airbag').any(axis=1)]
+
+
+horse_name_db = pd.DataFrame(columns = ["horseName","birthDate","link"])
+horse_name_db.loc[0] = ["MR BRIGHTSIDE (NZ)","17-Oct-2017","/InteractiveForm/HorseAllForm.aspx?HorseCode=Nzk1NzUyODk4NQ%3d%3d&src=horsesearch"]
+print(horse_name_db)
