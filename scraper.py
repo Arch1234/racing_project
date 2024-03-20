@@ -41,7 +41,7 @@ horse_name_db.loc[0] = ["MR BRIGHTSIDE (NZ)","17-Oct-2017","/InteractiveForm/Hor
 raceday_db = pd.DataFrame(columns=["location", "date","trial","link"])
 
 
-def get_race_data(links):
+def get_horse_names(links):
     df_append_list = []
     global horse_name_db
 
@@ -60,25 +60,22 @@ def get_race_data(links):
                 df_append_list.append(horse_name_dict)
     horse_name_db = pd.concat([horse_name_db,pd.DataFrame(df_append_list,columns=["horseName","birthDate","link"])],ignore_index=True)
 
-get_race_data(["InteractiveForm/Meeting.aspx?meetcode=Nzc1ODY5MzAxNg%3d%3d"])
-get_race_data(["InteractiveForm/Meeting.aspx?meetcode=Nzc1ODY5MzAxNg%3d%3d"])
-print(horse_name_db)
+
+def get_horse_info(horse_link):
+    horse_request = bs(requests.get(f"https://racingaustralia.horse/{horse_link}",headers=headers).content, "html.parser")
+    horse_request.find_all("tr",{"class":["OddRow","EvenRow"]})
+    horse_race_dict
+    pattern = r'([A-Z\s]+) (\d{2}[A-Za-z]{3}\d{2}) (\d+m) ([A-Za-z]+\d+) ([A-Za-z\d\s-]+) \$([\d,]+) \$([\d,]+) ([A-Za-z]+\s[A-Za-z]+) (\d+(\.\d+)?kg) Barrier (\d+)' #([A-Za-z]+\s[A-Za-z]+) Barrier (\d+)'
+    
+    pattern = r'(\d+(\.\d+)?kg)'
+    
+    pattern = r'\$([\d,]+)'
+
+    pattern = "Barrier (\d+)"
 
 
 
-
-
-
-
-#raceday_request = bs(requests.get("https://racingaustralia.horse/InteractiveForm/Meeting.aspx?meetcode=Nzc1ODY5MzAxNg%3d%3d",headers=headers).content, "html.parser")
-#horses = raceday_request.select(".horse")
-#print(horses)
-
-
-
-
-
-
+    
 
 
 
