@@ -1,9 +1,9 @@
 import requests
 import pandas as pd 
 from bs4 import BeautifulSoup as bs
-import re
 from concurrent.futures import ThreadPoolExecutor
 import time
+import re
  
 
 #git status
@@ -63,17 +63,46 @@ def get_horse_names(links):
 
 def get_horse_info(horse_link):
     horse_request = bs(requests.get(f"https://racingaustralia.horse/{horse_link}",headers=headers).content, "html.parser")
-    horse_request.find_all("tr",{"class":["OddRow","EvenRow"]})
-    horse_race_dict
+    horses = horse_request.find_all("tr",{"class":["OddRow","EvenRow"]})
     pattern = r'([A-Z\s]+) (\d{2}[A-Za-z]{3}\d{2}) (\d+m) ([A-Za-z]+\d+) ([A-Za-z\d\s-]+) \$([\d,]+) \$([\d,]+) ([A-Za-z]+\s[A-Za-z]+) (\d+(\.\d+)?kg) Barrier (\d+)' #([A-Za-z]+\s[A-Za-z]+) Barrier (\d+)'
     
-    pattern = r'(\d+(\.\d+)?kg)'
-    
-    pattern = r'\$([\d,]+)'
+    for horse in horses:
 
-    pattern = "Barrier (\d+)"
+        if (horse.find("b").text.split(" ")[0] == "MATA") or ():
+            pass
+        else:
+            print(horse)
+            position = horse.find("td").text.rstrip().split(" ")[0]
+            info = horse.find_all("b")
+            
+
+            print(info[0].text)
+            loc_date = re.match(r'([A-Z\s]+) (\d{2}[A-Za-z]{3}\d{2})',info[0].text)
+            # print(loc_date)
+            loc,date = loc_date.groups()[0],loc_date.groups()[1]
+
+            # print(horse.next_sibling.split("(")[0].strip().replace("  ", " "))
+            race_info = re.match(r'(\d+m) ([A-Za-z]+\d+) ([A-Za-z\d\s-]+) \$([\d,]+)',info[0].next_sibling.split("(")[0].strip().replace("  ", " "))
+            # print(race_info)
+            distance, track_rating, rclass, prizeMoney = race_info.groups()[0],race_info.groups()[1],race_info.groups()[2],race_info.groups()[3]
+
+            #horse_info = re.match(r'(\d+m) ([A-Za-z]+\d+) ([A-Za-z\d\s-]+) \$([\d,]+)',info[0].find_all("b")[0].next_sibling.split("(")[0].strip().replace("  ", " "))
+
+            jockey = horse.find_all("b")[0].next_sibling.next_sibling.text
+
+            timing_info = info[-1].next_sibling.split(",")
+            weight, race_time, time_600 = timing_info[0].strip().split(" ")[0].replace("kg",""), timing_info[0].strip().split(" ")[1], timing_info[0].strip().split(" ")[-1].replace(")","") 
+            margin, time_800, time_400, flucs = timing_info[1].strip().replace("L",""),timing_info[2].strip().replace("th@800m",""),timing_info[3].strip().replace("th@400m",""),timing_info[4].replace("$","").split("/")
+
+            #print(position,loc,date,distance, track_rating, rclass, prizeMoney,jockey,weight, race_time, time_600,margin, time_800, time_400, flucs)
 
 
+
+
+
+
+
+get_horse_info("InteractiveForm/HorseAllForm.aspx?HorseCode=OTAxNzgyNTk4NQ%3d%3d&src=horsesearch")
 
     
 
