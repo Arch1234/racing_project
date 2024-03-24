@@ -58,25 +58,18 @@ def get_horse_info(horse_link):
     
     for horse in horses:
         if str(re.match(r'([A-Z\s]+)',horse.find_all("b")[0].text).group()).strip() in ["MATA","ALSP", "T CK"]:
+            print("Got ")
             pass
         else:
-            #print(horse)
             position = horse.find("td").text.rstrip().split(" ")[0]
             info = horse.find_all("b")
             
-
-            #print(info[0].text)
             loc_date = re.match(r'([A-Z\s]+) (\d{2}[A-Za-z]{3}\d{2})',info[0].text)
-            # print(loc_date)
             loc,date = loc_date.groups()[0],loc_date.groups()[1]
-            # print(date)
-            #print(info[0].next_sibling.split("(")[0].strip().replace("  ", " "))
-            # print(info[0].next_sibling.split("(")[0].strip().replace("  ", " ").replace("&",""))
+            
             race_info = re.match(r'(\d+m) ([A-Za-z]+\d+) ([A-Za-z\d\s-]+) \$([\d,]+)',info[0].next_sibling.split("(")[0].strip().replace("  ", " ").replace("&",""))
-            # print(race_info)
+           
             distance, track_rating, rclass, prizeMoney = race_info.groups()[0],race_info.groups()[1],race_info.groups()[2],race_info.groups()[3]
-
-            #horse_info = re.match(r'(\d+m) ([A-Za-z]+\d+) ([A-Za-z\d\s-]+) \$([\d,]+)',info[0].find_all("b")[0].next_sibling.split("(")[0].strip().replace("  ", " "))
 
             jockey = horse.find_all("b")[0].next_sibling.next_sibling.text
 
@@ -92,7 +85,7 @@ def get_horse_info(horse_link):
 
 
 
-get_horse_info("InteractiveForm/HorseAllForm.aspx?HorseCode=MTA2MjMwOTIyNTY%3d&src=horseform&raceEntry=MjU1ODI1ODY0MDA%3d")
+get_horse_info("InteractiveForm/HorseAllForm.aspx?HorseCode=MTA2ODc3OTM3NjA%3d&src=horsesearch")
 
     
 
