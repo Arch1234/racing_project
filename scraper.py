@@ -12,16 +12,6 @@ import re
 #git push
 
 
-# initial_horse_data = bs(requests.get("https://racingaustralia.horse/InteractiveForm/HorseAllForm.aspx?HorseCode=NzQ0MzI4NDk0MA%3d%3d&src=horsesearch",headers=headers).content, "html.parser")
-
-# links = initial_horse_data.select("a[href*=Meeting]")
-# link_df = pd.DataFrame(columns=['venue', 'date', 'link'])
-
-# for link in links:
-#     print(link.text.rsplit(",",1))
-#     print(link["href"])
-#     link_df.loc[len(link_df)] = link.text.rsplit(" ",1)+[link['href']]
-
 ##Scrape a horse at a time and record the race-days it has been to 
 #check these against exhisting racedays
 #add horses race stats into the dataframe
@@ -67,22 +57,22 @@ def get_horse_info(horse_link):
     pattern = r'([A-Z\s]+) (\d{2}[A-Za-z]{3}\d{2}) (\d+m) ([A-Za-z]+\d+) ([A-Za-z\d\s-]+) \$([\d,]+) \$([\d,]+) ([A-Za-z]+\s[A-Za-z]+) (\d+(\.\d+)?kg) Barrier (\d+)' #([A-Za-z]+\s[A-Za-z]+) Barrier (\d+)'
     
     for horse in horses:
-
-        if (horse.find("b").text.split(" ")[0] == "MATA") or ():
+        if str(re.match(r'([A-Z\s]+)',horse.find_all("b")[0].text).group()).strip() in ["MATA","ALSP", "T CK"]:
             pass
         else:
-            print(horse)
+            #print(horse)
             position = horse.find("td").text.rstrip().split(" ")[0]
             info = horse.find_all("b")
             
 
-            print(info[0].text)
+            #print(info[0].text)
             loc_date = re.match(r'([A-Z\s]+) (\d{2}[A-Za-z]{3}\d{2})',info[0].text)
             # print(loc_date)
             loc,date = loc_date.groups()[0],loc_date.groups()[1]
-
-            # print(horse.next_sibling.split("(")[0].strip().replace("  ", " "))
-            race_info = re.match(r'(\d+m) ([A-Za-z]+\d+) ([A-Za-z\d\s-]+) \$([\d,]+)',info[0].next_sibling.split("(")[0].strip().replace("  ", " "))
+            # print(date)
+            #print(info[0].next_sibling.split("(")[0].strip().replace("  ", " "))
+            # print(info[0].next_sibling.split("(")[0].strip().replace("  ", " ").replace("&",""))
+            race_info = re.match(r'(\d+m) ([A-Za-z]+\d+) ([A-Za-z\d\s-]+) \$([\d,]+)',info[0].next_sibling.split("(")[0].strip().replace("  ", " ").replace("&",""))
             # print(race_info)
             distance, track_rating, rclass, prizeMoney = race_info.groups()[0],race_info.groups()[1],race_info.groups()[2],race_info.groups()[3]
 
@@ -94,7 +84,7 @@ def get_horse_info(horse_link):
             weight, race_time, time_600 = timing_info[0].strip().split(" ")[0].replace("kg",""), timing_info[0].strip().split(" ")[1], timing_info[0].strip().split(" ")[-1].replace(")","") 
             margin, time_800, time_400, flucs = timing_info[1].strip().replace("L",""),timing_info[2].strip().replace("th@800m",""),timing_info[3].strip().replace("th@400m",""),timing_info[4].replace("$","").split("/")
 
-            #print(position,loc,date,distance, track_rating, rclass, prizeMoney,jockey,weight, race_time, time_600,margin, time_800, time_400, flucs)
+            print(position,loc,date,distance, track_rating, rclass, prizeMoney,jockey,weight, race_time, time_600,margin, time_800, time_400, flucs)
 
 
 
@@ -102,7 +92,7 @@ def get_horse_info(horse_link):
 
 
 
-get_horse_info("InteractiveForm/HorseAllForm.aspx?HorseCode=OTAxNzgyNTk4NQ%3d%3d&src=horsesearch")
+get_horse_info("InteractiveForm/HorseAllForm.aspx?HorseCode=MTA2MjMwOTIyNTY%3d&src=horseform&raceEntry=MjU1ODI1ODY0MDA%3d")
 
     
 
