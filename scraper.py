@@ -29,46 +29,68 @@ headers = { 'Accept-Language' : 'text/html,application/xhtml+xml,application/xml
 
  
 horse_name_db = pd.DataFrame(columns = ["horseName","birthDate","link"])
+horses_in_race_db = pd.DataFrame(columns=["location", "date","raceNumber","horsesNumber","link"])
 horse_name_db.loc[0] = ["MR BRIGHTSIDE (NZ)","17-Oct-2017","/InteractiveForm/HorseAllForm.aspx?HorseCode=Nzk1NzUyODk4NQ%3d%3d&src=horsesearch"]
 
 raceday_db = pd.DataFrame(columns=["location", "date","link"])
 
-horses_in_race_db = pd.DataFrame(columns=["location", "date","raceNumber","horsesNumber","link"])
 
-
-def get_horse_names(links):
-    df_append_list = []
+def get_horse_names_from_meetings(link,date):
+    horse_name_append_list = []
+    horses_in_race_append_list = []
     global horse_name_db
-    for link in links:
-        t = time.time()
-        raceday_request = bs(requests.get(f"https://racingaustralia.horse/{link}",headers=headers).content, "html.parser")#Meeting.aspx?meetcode=Nzc1ODI3ODc0MA%3d%3d#Race8
-        horses = raceday_request.select(".horse > .GreenLink")
-        for horse in horses:
-            if len(horse_name_db['link'].to_numpy()[horse_name_db['link'].to_numpy() == horse["href"].replace("HorseFullForm","HorseAllForm")]) == 0:
-                horse_name_dict = {}
-                horse_name_dict["horseName"] = horse.text.replace("\r","").replace("\t","").replace("\n","").rstrip()
-                horse_name_dict["birthDate"] = ""
-                horse_name_dict["link"] = horse["href"].replace("HorseFullForm","HorseAllForm")
-                df_append_list.append(horse_name_dict)
-        races = raceday_request.find_all("table",{"cellpadding":"3"})
-        for race in races:
-            horse_no = race.select('span[class*="Finish"]')
-            b = 0
-            for a in horse_no:
-                if (int(a.text) > b):
-                    b = int(a.text)
-            print(b)
-    horse_name_db = pd.concat([horse_name_db,pd.DataFrame(df_append_list,columns=["horseName","birthDate","link"])],ignore_index=True)
+    global horses_in_race_db
+
+    t = time.time()
+    raceday_request = bs(requests.get(f"https://racingaustralia.horse/{link}",headers=headers).content, "html.parser")#Meeting.aspx?meetcode=Nzc1ODI3ODc0MA%3d%3d#Race8
+    horses = raceday_request.select(".horse > .GreenLink")
+    for horse in horses:
+        if len(horse_name_db['link'].to_numpy()[horse_name_db['link'].to_numpy() == horse["href"].replace("HorseFullForm","HorseAllForm")]) == 0:
+            horse_name_dict = {}
+            horse_name_dict["horseName"] = horse.text.replace("\r","").replace("\t","").replace("\n","").rstrip()
+            horse_name_dict["birthDate"] = ""
+            horse_name_dict["link"] = horse["href"].replace("HorseFullForm","HorseAllForm")
+            horse_name_append_list.append(horse_name_dict)
+    
+    races = raceday_request.find_all("table",{"cellpadding":"3"})
+    print(races)
+    rr = 1
+    for race in races:
+        horse_no = race.select('span[class*="Finish"]')
+        print(horse_no)
+        b = 0
+        for a in horse_no:
+            if a.text == "FF":
+                pass
+            elif (int(a.text) > b):
+                b = int(a.text)
+        horse_name = {}
+        horse_name["location"] = raceday_request.find("h2").text.split(":")[0]
+        horse_name["date"] = date
+        horse_name["raceNumber"] = rr
+        horse_name["horsesNumber"] = b
+        horse_name["link"] = link
+        horses_in_race_append_list.append(horse_name)
+        rr += 1
+
+    horse_name_db = pd.concat([horse_name_db,pd.DataFrame(horse_name_append_list,columns=["horseName","birthDate","link"])],ignore_index=True)
+    horses_in_race_db = pd.concat([horses_in_race_db,pd.DataFrame(horses_in_race_append_list,columns=["location", "date","raceNumber","horsesNumber","link"])],ignore_index=True)
 
 
-get_horse_names(["InteractiveForm/Meeting.aspx?meetcode=MTIxNjcxODgxMTk%3d#Race7"])
 
 
-def get_horse_info(horse_link):
+get_horse_names_from_meetings("InteractiveForm/Meeting.aspx?meetcode=MTIxNjc5MzA0MDM%3d#Race1","dd")
+
+
+def get_horse_race_info(horse_link):
     horse_request = bs(requests.get(f"https://racingaustralia.horse/{horse_link}",headers=headers).content, "html.parser")
     horses = horse_request.find_all("tr",{"class":["OddRow","EvenRow"]})
-    pattern = r'([A-Z\s]+) (\d{2}[A-Za-z]{3}\d{2}) (\d+m) ([A-Za-z]+\d+) ([A-Za-z\d\s-]+) \$([\d,]+) \$([\d,]+) ([A-Za-z]+\s[A-Za-z]+) (\d+(\.\d+)?kg) Barrier (\d+)' #([A-Za-z]+\s[A-Za-z]+) Barrier (\d+)'
-    
+
+    horse_name = horse_request.find("h2").text.strip()
+    horse_brithday = horse_request.find("h2").next_sibling.next_sibling.next_sibling.text.split(":")[1].strip()
+
+    raceday_append_list = []
+
     for horse in horses:
         if str(re.match(r'([A-Z\s]+)',horse.find_all("b")[0].text).group()).strip() in ["MATA","ALSP", "T CK"]:
             pass
@@ -91,14 +113,17 @@ def get_horse_info(horse_link):
             weight, race_time, time_600 = timing_info[0].strip().split(" ")[0].replace("kg",""), timing_info[0].strip().split(" ")[1], timing_info[0].strip().split(" ")[-1].replace(")","") 
             margin, time_800, time_400, flucs = timing_info[1].strip().replace("L",""),timing_info[2].strip().replace("th@800m",""),timing_info[3].strip().replace("th@400m",""),timing_info[4].replace("$","").split("/")
 
-            print(position,loc,date,distance, track_rating, rclass, prizeMoney,jockey,weight, race_time, time_600,margin, time_800, time_400, flucs)
+            print([horse_name, date,loc,position,distance, track_rating, rclass, prizeMoney,jockey,weight, race_time, time_600,margin, time_800, time_400, flucs])
+            print([loc,date, info[0].find("a")["href"]])
+
+            raceday_append_list.append([loc,date, info[0].find("a")["href"]])
 
 
 
 
 
 
-get_horse_info("InteractiveForm/HorseAllForm.aspx?HorseCode=MTA2ODc3OTM3NjA%3d&src=horsesearch")
+get_horse_race_info("InteractiveForm/HorseAllForm.aspx?HorseCode=MTI1MjM5NjgzMzM%3d&src=horseform&raceEntry=MzM2NTE1MTMyNjE%3d")
 
     
 
